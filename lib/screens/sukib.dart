@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:ner_12_s1_p1/produk/produk.dart';
 import 'package:ner_12_s1_p1/screens/add.dart';
+import 'package:ner_12_s1_p1/screens/detail.dart';
+import 'package:ner_12_s1_p1/screens/edit.dart';
 import 'package:ner_12_s1_p1/service/api_se.dart';
 import 'package:ner_12_s1_p1/wsuki/produk_card.dart';
-import 'package:ner_12_s1_p1/screens/edit.dart'; 
 
 class Sukib extends StatefulWidget {
   const Sukib({super.key});
@@ -33,7 +34,7 @@ class _SukibState extends State<Sukib> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("data produk"),
+        title: const Text("Data Produk"),
         centerTitle: true,
       ),
       body: RefreshIndicator(
@@ -46,6 +47,7 @@ class _SukibState extends State<Sukib> {
                 child: CircularProgressIndicator(),
               );
             }
+
             if (snapshot.hasError) {
               return ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -55,77 +57,91 @@ class _SukibState extends State<Sukib> {
                 ],
               );
             }
+
             if (snapshot.hasData && snapshot.data!.isNotEmpty) {
               List<Produk> listProduk = snapshot.data!;
               return ListView.builder(
                 physics: const AlwaysScrollableScrollPhysics(),
                 itemCount: listProduk.length,
                 itemBuilder: (context, index) {
+                  final produk = listProduk[index];
+
                   return ProdukCard(
-                    produk: listProduk[index],
+                    produk: produk,
+                    onDetail: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => Detail(produk: produk),
+                        ),
+                      );
+                    },
                     onEdit: () async {
                       final hasil = await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => editSuki(produk: listProduk[index]),
+                          builder: (_) => editSuki(produk: produk),
                         ),
                       );
-                     
                       if (hasil == true) {
-                        _refreshData(); 
+                        _refreshData();
                       }
                     },
-                   onDelete: () async {
- 
-  bool? konfirmasi = await showDialog<bool>(
-    context: context,
-    barrierDismissible: false, 
-    builder: (context) {
-      return AlertDialog(
-        title: const Text("Hapus Produk"),
-        content: Text("Apakah Anda yakin ingin menghapus produk '${listProduk[index].nama}'?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false), // Jika batal, kirim false
-            child: const Text("Batal"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red), // Warna merah untuk tanda hapus
-            onPressed: () => Navigator.pop(context, true), // Jika yakin, kirim true
-            child: const Text("Ya, Hapus", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      );
-    },
-  );
+                    onDelete: () async {
+                      bool? konfirmasi = await showDialog<bool>(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text("Hapus Produk"),
+                            content: Text(
+                              "Apakah Anda yakin ingin menghapus produk '${produk.nama}'?",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text("Batal"),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                ),
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text(
+                                  "Ya, Hapus",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
 
- 
-  if (konfirmasi == true) {
-    
-    if (listProduk[index].id != null) {
-      
-      bool berhasil = await api.deleteProduk(listProduk[index].id!);
-
-      if (mounted) {
-        if (berhasil) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Produk berhasil dihapus!")),
-          );
-          _refreshData(); 
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Gagal menghapus produk")),
-          );
-        }
-      }
-    }
-  }
-},
-
+                      if (konfirmasi == true && produk.id != null) {
+                        bool berhasil = await api.deleteProduk(produk.id!);
+                        if (mounted) {
+                          if (berhasil) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Produk berhasil dihapus!"),
+                              ),
+                            );
+                            _refreshData();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Gagal menghapus produk"),
+                              ),
+                            );
+                          }
+                        }
+                      }
+                    },
                   );
                 },
               );
             }
+
             // Kondisi jika data kosong
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
