@@ -37,47 +37,43 @@ class _editSukiState extends State<editSuki> {
     super.dispose();
   }
 
-
   Future<void> updateData() async {
-  setState(() {
-    loading = true;
-  });
+    setState(() {
+      loading = true;
+    });
 
-  Produk produkBaru = Produk(
-    id: widget.produk.id, 
-    nama: namaController.text,
-    harga: int.parse(hargaController.text),
-    stok: int.parse(stokController.text),
-    desk: deskController.text,
-  );
-
-  
-  bool berhasil = await api.updateProduk(produkBaru);
-
-  if (!mounted) return;
-  setState(() {
-    loading = false;
-  });
-
-  if (berhasil) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Berhasil edit produk")),
+    Produk produkBaru = Produk(
+      id: widget.produk.id,
+      nama: namaController.text,
+      harga: int.parse(hargaController.text),
+      stok: int.parse(stokController.text),
+      desk: deskController.text,
     );
-    Navigator.pop(context, true);
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Gagal edit produk")), 
-    );
+
+    bool berhasil = await api.updateProduk(produkBaru);
+    if (!mounted) return;
+
+    setState(() {
+      loading = false;
+    });
+
+    if (berhasil) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Berhasil edit produk")),
+      );
+
+      Navigator.pop(context, produkBaru);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Gagal edit produk")),
+      );
+    }
   }
-}
 
-
-  
   Future<void> konfirmasiUpdate() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-
     bool? hasil = await showDialog(
       context: context,
       barrierDismissible: false,
@@ -98,7 +94,6 @@ class _editSukiState extends State<editSuki> {
         );
       },
     );
-
     if (hasil == true) {
       updateData();
     }

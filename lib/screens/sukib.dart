@@ -47,7 +47,6 @@ class _SukibState extends State<Sukib> {
                 child: CircularProgressIndicator(),
               );
             }
-
             if (snapshot.hasError) {
               return ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -57,7 +56,6 @@ class _SukibState extends State<Sukib> {
                 ],
               );
             }
-
             if (snapshot.hasData && snapshot.data!.isNotEmpty) {
               List<Produk> listProduk = snapshot.data!;
               return ListView.builder(
@@ -65,16 +63,20 @@ class _SukibState extends State<Sukib> {
                 itemCount: listProduk.length,
                 itemBuilder: (context, index) {
                   final produk = listProduk[index];
-
                   return ProdukCard(
                     produk: produk,
+                    // PERBAIKAN: Menambahkan penangkap data kembalian 'hasil' dari halaman Detail
                     onDetail: () async {
-                      await Navigator.push(
+                      final hasil = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => Detail(produk: produk),
                         ),
                       );
+                    
+                      if (hasil == true) {
+                        _refreshData();
+                      }
                     },
                     onEdit: () async {
                       final hasil = await Navigator.push(
@@ -116,7 +118,6 @@ class _SukibState extends State<Sukib> {
                           );
                         },
                       );
-
                       if (konfirmasi == true && produk.id != null) {
                         bool berhasil = await api.deleteProduk(produk.id!);
                         if (mounted) {
@@ -141,7 +142,6 @@ class _SukibState extends State<Sukib> {
                 },
               );
             }
-
             // Kondisi jika data kosong
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
