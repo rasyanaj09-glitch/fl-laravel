@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ner_12_s1_p1/produk/produk.dart';
 import 'package:ner_12_s1_p1/screens/edit.dart';
+import 'package:ner_12_s1_p1/service/api_se.dart';
 
 class Detail extends StatefulWidget {
   final Produk produk;
@@ -25,6 +26,8 @@ class _DetailState extends State<Detail> {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = ApiService.getImageUrl(_currentProduk.gambar);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("detail"),
@@ -45,16 +48,35 @@ class _DetailState extends State<Detail> {
                 height: 220,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.blue,
+                  color: Colors.blue.shade100,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: const Center(
-                  child: Icon(
-                    Icons.monitor,
-                    size: 120,
-                    color: Colors.black,
-                  ),
-                ),
+                child: imageUrl.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
+                        child: Image.network(
+                          imageUrl,
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: 220,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 120,
+                                color: Colors.grey,
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    : const Center(
+                        child: Icon(
+                          Icons.image_not_supported,
+                          size: 120,
+                          color: Colors.grey,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 15),
