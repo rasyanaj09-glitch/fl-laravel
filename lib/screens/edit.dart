@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; 
+import 'dart:io'; 
 import 'package:ner_12_s1_p1/produk/produk.dart';
 import 'package:ner_12_s1_p1/service/api_se.dart';
 
@@ -19,6 +21,10 @@ class _editSukiState extends State<editSuki> {
   final ApiService api = ApiService();
   bool loading = false;
 
+
+  File? image;
+  final picker = ImagePicker();
+
   @override
   void initState() {
     super.initState();
@@ -37,6 +43,16 @@ class _editSukiState extends State<editSuki> {
     super.dispose();
   }
 
+
+  Future<void> pilihgmbr() async {
+    final XFile? picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        image = File(picked.path);
+      });
+    }
+  }
+
   Future<void> updateData() async {
     setState(() {
       loading = true;
@@ -50,7 +66,9 @@ class _editSukiState extends State<editSuki> {
       desk: deskController.text,
     );
 
-    bool berhasil = await api.updateProduk(produkBaru);
+ 
+    bool berhasil = await api.updateProduk(produkBaru, image);
+
     if (!mounted) return;
 
     setState(() {
@@ -62,7 +80,7 @@ class _editSukiState extends State<editSuki> {
         const SnackBar(content: Text("Berhasil edit produk")),
       );
 
-      Navigator.pop(context, produkBaru);
+      Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Gagal edit produk")),
@@ -110,63 +128,101 @@ class _editSukiState extends State<editSuki> {
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
             children: [
-              TextFormField(
-                controller: namaController,
-                decoration: const InputDecoration(
-                  labelText: "Nama produk",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.shop),
-                ),
-                validator: (value) => (value == null || value.isEmpty) ? "Nama produk wajib diisi" : null,
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: hargaController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: "Harga produk",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.money),
-                ),
-                validator: (value) => (value == null || value.isEmpty) ? "Harga produk wajib diisi" : null,
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: stokController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: "Stok produk",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.inventory),
-                ),
-                validator: (value) => (value == null || value.isEmpty) ? "Stok produk wajib diisi" : null,
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: deskController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: "Deskripsi produk",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.description),
-                ),
-                validator: (value) => (value == null || value.isEmpty) ? "Deskripsi produk wajib diisi" : null,
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                height: 55,
-                child: ElevatedButton.icon(
-                  onPressed: loading ? null : konfirmasiUpdate,
-                  icon: loading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+         
+              Center(
+                child: GestureDetector(
+                  onTap: pilihgmbr,
+                  child: image == null
+                      ? Container(
+                          height: 100,
+                          width: 100,
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade100,
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: const Icon(
+                            Icons.add_a_photo,
+                            size: 40,
+                            color: Colors.blue,
+                          ),
                         )
-                      : const Icon(Icons.save),
-                  label: Text(loading ? "Menyimpan.." : "Update"),
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: Image.file(
+                            image!,
+                            height: 100,
+                            width: 100,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              // === AKHIR TAMPILAN GAMBAR ===
+
+              Expanded(
+                child: ListView(
+                  children: [
+                    TextFormField(
+                      controller: namaController,
+                      decoration: const InputDecoration(
+                        labelText: "Nama produk",
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.shop),
+                      ),
+                      validator: (value) => (value == null || value.isEmpty) ? "Nama produk wajib diisi" : null,
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: hargaController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: "Harga produk",
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.money),
+                      ),
+                      validator: (value) => (value == null || value.isEmpty) ? "Harga produk wajib diisi" : null,
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: stokController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: "Stok produk",
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.inventory),
+                      ),
+                      validator: (value) => (value == null || value.isEmpty) ? "Stok produk wajib diisi" : null,
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: deskController,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: "Deskripsi produk",
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.description),
+                      ),
+                      validator: (value) => (value == null || value.isEmpty) ? "Deskripsi produk wajib diisi" : null,
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      height: 55,
+                      child: ElevatedButton.icon(
+                        onPressed: loading ? null : konfirmasiUpdate,
+                        icon: loading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.save),
+                        label: Text(loading ? "Menyimpan.." : "Update"),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

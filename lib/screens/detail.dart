@@ -11,15 +11,15 @@ class Detail extends StatefulWidget {
 }
 
 class _DetailState extends State<Detail> {
-  // Variabel lokal untuk menampung data produk terupdate
+ 
   late Produk _currentProduk;
-  // Sinyal untuk memberi tahu halaman home (Sukib) agar ikut refresh saat kita kembali
+  
   bool _isEdited = false;
 
   @override
   void initState() {
     super.initState();
-    // Ambil data kiriman awal dari halaman utama
+ 
     _currentProduk = widget.produk;
   }
 
@@ -29,7 +29,7 @@ class _DetailState extends State<Detail> {
       appBar: AppBar(
         title: const Text("detail"),
         centerTitle: true,
-        // KUNCI 1: Menangkap tombol back kiri atas bawaan AppBar
+        
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context, _isEdited),
@@ -117,7 +117,7 @@ class _DetailState extends State<Detail> {
                   padding: const EdgeInsets.symmetric(vertical: 15),
                 ),
                 onPressed: () async {
-                  // Menunggu objek data produk baru dari halaman editSuki
+            
                   final hasil = await Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -125,11 +125,10 @@ class _DetailState extends State<Detail> {
                     ),
                   );
 
-                  // KUNCI 2: Jika hasil kembalian dari editSuki berupa objek Produk baru
                   if (hasil is Produk) {
                     setState(() {
-                      _currentProduk = hasil; // Mengganti data lama di layar detail seketika
-                      _isEdited = true;       // Menandai true agar Home tahu data berubah
+                      _currentProduk = hasil; 
+                      _isEdited = true;       
                     });
                   }
                 },
@@ -145,7 +144,7 @@ class _DetailState extends State<Detail> {
                   padding: const EdgeInsets.symmetric(vertical: 15),
                 ),
                 onPressed: () {
-                  // KUNCI 3: Mengirim status edit saat menekan tombol balik di bawah
+                  
                   Navigator.pop(context, _isEdited);
                 },
               ),
