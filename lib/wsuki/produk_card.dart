@@ -46,14 +46,20 @@ class ProdukCard extends StatelessWidget {
                               imageUrl,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
-                                return const Icon(
-                                  Icons.broken_image,
-                                  size: 40,
-                                  color: Colors.grey,
+                                return Image.asset(
+                                  'assets/images/not.jpg',
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.contain,
                                 );
                               },
                             )
-                          : const Icon(Icons.image, size: 40, color: Colors.grey),
+                          : Image.asset(
+                              'assets/images/not.jpg',
+                              width: 40,
+                              height: 40,
+                              fit: BoxFit.contain,
+                            ),
                     ),
                   ),
                   const SizedBox(width: 15), // Jarak horizontal antara kotak gambar dan teks info

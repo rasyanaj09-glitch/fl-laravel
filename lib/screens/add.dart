@@ -94,10 +94,11 @@ class _AddState extends State<Add> {
                             color: Colors.blue.shade100,
                             borderRadius: BorderRadius.circular(15),
                           ),
-                          child: const Icon(
-                            Icons.add_a_photo, 
-                            size: 40,
-                            color: Colors.blue,
+                          child: Image.asset(
+                            'assets/images/not.jpg',
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.contain,
                           ),
                         )
                       : ClipRRect(

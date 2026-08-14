@@ -134,21 +134,8 @@ class _editSukiState extends State<editSuki> {
               Center(
                 child: GestureDetector(
                   onTap: pilihgmbr,
-                  child: image == null
-                      ? Container(
-                          height: 100,
-                          width: 100,
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade100,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: const Icon(
-                            Icons.add_a_photo,
-                            size: 40,
-                            color: Colors.blue,
-                          ),
-                        )
-                      : ClipRRect(
+                  child: image != null
+                      ? ClipRRect(
                           borderRadius: BorderRadius.circular(15),
                           child: Image.file(
                             image!,
@@ -156,7 +143,37 @@ class _editSukiState extends State<editSuki> {
                             width: 100,
                             fit: BoxFit.cover,
                           ),
-                        ),
+                        )
+                      : (widget.produk.gambar != null && widget.produk.gambar!.trim().isNotEmpty)
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: Image.network(
+                                ApiService.getImageUrl(widget.produk.gambar),
+                                height: 100,
+                                width: 100,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Image.asset(
+                                  'assets/images/not.jpg',
+                                  height: 100,
+                                  width: 100,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            )
+                          : Container(
+                              height: 100,
+                              width: 100,
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade100,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Image.asset(
+                                'assets/images/not.jpg',
+                                width: 40,
+                                height: 40,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
                 ),
               ),
               const SizedBox(height: 15),

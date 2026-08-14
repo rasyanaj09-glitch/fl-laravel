@@ -60,21 +60,23 @@ class _DetailState extends State<Detail> {
                           width: double.infinity,
                           height: 220,
                           errorBuilder: (context, error, stackTrace) {
-                            return const Center(
-                              child: Icon(
-                                Icons.broken_image,
-                                size: 120,
-                                color: Colors.grey,
+                            return Center(
+                              child: Image.asset(
+                                'assets/images/not.jpg',
+                                width: 120,
+                                height: 120,
+                                fit: BoxFit.contain,
                               ),
                             );
                           },
                         ),
                       )
-                    : const Center(
-                        child: Icon(
-                          Icons.image_not_supported,
-                          size: 120,
-                          color: Colors.grey,
+                    : Center(
+                        child: Image.asset(
+                          'assets/images/not.jpg',
+                          width: 120,
+                          height: 120,
+                          fit: BoxFit.contain,
                         ),
                       ),
               ),

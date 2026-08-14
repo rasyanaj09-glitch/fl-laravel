@@ -51,31 +51,27 @@ class ApiService {
 
   Future<bool> storeProduk(Produk produk, File? image) async {
     try {
-    
       var request = http.MultipartRequest('POST', Uri.parse("${baseUrl}produk"));
-      
-    
+
       request.fields['nama'] = produk.nama;
       request.fields['harga'] = produk.harga.toString();
       request.fields['stok'] = produk.stok.toString();
       request.fields['desk'] = produk.desk;
 
-      
       if (image != null) {
         request.files.add(
           await http.MultipartFile.fromPath(
-            'gambar', 
+            'gambar',
             image.path,
           ),
         );
       }
 
-     
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
+      // tambahkan timeout agar UI tidak menggantung terlalu lama
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 15));
+      final response = await http.Response.fromStream(streamedResponse);
 
       return response.statusCode == 201;
-      
     } catch (e) {
       return false;
     }
@@ -108,7 +104,7 @@ class ApiService {
           );
         }
 
-        final streamedResponse = await request.send();
+        final streamedResponse = await request.send().timeout(const Duration(seconds: 15));
         return http.Response.fromStream(streamedResponse);
       }
 
