@@ -30,11 +30,11 @@ class ProdukCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // === SUSUNAN ROW: GAMBAR DI KIRI, INFORMASI DI KANAN ===
+           
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. KOTAK TAMPILAN GAMBAR PRODUK
+       
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
@@ -62,9 +62,9 @@ class ProdukCard extends StatelessWidget {
                             ),
                     ),
                   ),
-                  const SizedBox(width: 15), // Jarak horizontal antara kotak gambar dan teks info
+                  const SizedBox(width: 15), 
 
-                  // 2. KELOMPOK TEKS INFO UTAMA (Nama, Harga, Stok)
+                 
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,7 +73,7 @@ class ProdukCard extends StatelessWidget {
                           produk.nama,
                           style: const TextStyle(
                             fontSize: 20,
-                            fontWeight: FontWeight.bold, // Diubah ke bold agar nama produk terlihat kontras
+                            fontWeight: FontWeight.bold, 
                           ),
                         ),
                         const SizedBox(height: 5),
@@ -81,7 +81,7 @@ class ProdukCard extends StatelessWidget {
                           "Harga: Rp ${produk.harga}",
                           style: const TextStyle(
                             fontSize: 16,
-                            color: Colors.green, // Warna hijau khusus untuk membedakan teks harga
+                            color: Colors.green, 
                           ),
                         ),
                         const SizedBox(height: 5),
@@ -98,11 +98,11 @@ class ProdukCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              // 3. DESKRIPSI PRODUK (Diletakkan di bawah agar bisa memanjang dengan rapi)
+       
               Text(
                 produk.desk,
-                maxLines: 2, // Membatasi teks deskripsi agar halaman home tidak terlalu penuh
-                overflow: TextOverflow.ellipsis, // Memberi efek titik-titik (...) jika teks terlalu panjang
+                maxLines: 2, 
+                overflow: TextOverflow.ellipsis, 
                 style: const TextStyle(
                   fontSize: 15,
                   color: Colors.black54,
@@ -110,7 +110,7 @@ class ProdukCard extends StatelessWidget {
               ),
               const SizedBox(height: 15),
 
-              // 4. TOMBOL AKSI (Edit & Hapus)
+             
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -125,8 +125,8 @@ class ProdukCard extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: onDelete,
-                      icon: const Icon(Icons.delete, color: Colors.red), // Perbaikan: Mengubah ikon menjadi tong sampah
-                      label: const Text("Hapus Data", style: TextStyle(color: Colors.red)), // Perbaikan: Mengubah teks label menjadi merah
+                      icon: const Icon(Icons.delete, color: Colors.red), 
+                      label: const Text("Hapus Data", style: TextStyle(color: Colors.red)), 
                     ),
                   ),
                 ],

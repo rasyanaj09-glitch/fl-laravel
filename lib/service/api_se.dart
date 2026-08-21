@@ -1,200 +1,146 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ner_12_s1_p1/produk/produk.dart';
 
 class ApiService {
-  // Base URL dikonfigurasi TANPA '/api/' sesuai default kustom Laravel Anda
-  static String get baseUrl {
-    if (Platform.isAndroid) {
-      return "http://localhost:8000/"; 
-    }
-  
-    return "http://localhost:8000/";
-  }
+  static String baseUrl = "http://localhost:8000/";
+  static String baseStorageUrl = "http://localhost:8000/";
 
-  static String get baseStorageUrl {
-    if (Platform.isAndroid) {
-      return "http://localhost:8000/";
-    }
-    return "http://localhost:8000/";
-  }
-
-  // Fungsi untuk mendapatkan URL lengkap gambar produk dari server
   static String getImageUrl(String? gambar) {
     if (gambar == null || gambar.trim().isEmpty) {
       return "";
     }
-
-    final cleanPath = gambar.trim().replaceAll('\\', '/');
-    final normalized = cleanPath.startsWith('/')
-        ? cleanPath.substring(1)
-        : cleanPath;
-
-    if (normalized.startsWith('http://') || normalized.startsWith('https://')) {
-      return normalized;
-    }
-
-    final pathWithoutStorage = normalized.startsWith('storage/')
-        ? normalized.substring('storage/'.length)
-        : normalized;
-
-    final pathWithoutPublic = pathWithoutStorage.startsWith('public/')
-        ? pathWithoutStorage.substring('public/'.length)
-        : pathWithoutStorage;
-
-    return "${baseStorageUrl}storage/$pathWithoutPublic";
+    final path = gambar.trim().replaceAll('\\', '/').replaceAll('storage/', '').replaceAll('public/', '');
+    return "${baseStorageUrl}storage/$path";
   }
 
-  // 🔒 FUNGSI OTOMATIS GENERATE HEADER TOKEN SANCTUM
-  Future<Map<String, String>> _getHeaders() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String? token = prefs.getString('api_token');
-    
-    // Log pemantau untuk debugging di terminal VS Code
-    debugPrint("=== INFO TOKEN SANCTUM ===");
-    debugPrint("Token yang dikirim: Bearer $token");
-
-    return {
-      'Authorization': 'Bearer ${token?.trim() ?? ""}',
-      'Accept': 'application/json', // Memaksa Laravel membalas dengan format JSON jika token salah
-    };
-  }
-
-  // ==========================================
-  // 1. READ: Menampilkan Semua Data Produk
-  // ==========================================
   Future<List<Produk>> getProduk() async {
     try {
-      final headers = await _getHeaders();
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('api_token');
+
       final response = await http.get(
         Uri.parse("${baseUrl}produk"), 
-        headers: headers,
+        headers: {
+          'Authorization': 'Bearer ${token ?? ""}',
+          'Accept': 'application/json',
+        },
       );
 
       if (response.statusCode == 200) {
         List jsonData = jsonDecode(response.body);
         return jsonData.map((e) => Produk.fromJson(e)).toList();
       } else if (response.statusCode == 401) {
-        throw Exception("Sesi login berakhir (401). Silakan login ulang dari aplikasi.");
+        throw Exception("Sesi login berakhir (401). Silakan login ulang.");
       } else {
-        throw Exception("Gagal memuat produk. Kode Status: ${response.statusCode}");
+        throw Exception("Gagal memuat produk. Status: ${response.statusCode}");
       }
     } catch (e) {
-      throw Exception("Error Read: ${e.toString()}");
+      throw Exception("Gagal terhubung ke server: $e");
     }
   }
 
-  // ==========================================
-  // 2. CREATE: Menambah Produk Baru (+ Upload Gambar)
-  // ==========================================
   Future<bool> storeProduk(Produk produk, File? image) async {
     try {
-      final headers = await _getHeaders();
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('api_token');
+
       var request = http.MultipartRequest('POST', Uri.parse("${baseUrl}produk"));
 
-      // Sisipkan token keamanan ke Multipart Request
-      request.headers.addAll(headers);
+      request.headers.addAll({'Authorization': 'Bearer ${token ?? ""}', 'Accept': 'application/json'});
 
-      // Masukkan field teks data produk
       request.fields['nama'] = produk.nama;
       request.fields['harga'] = produk.harga.toString();
       request.fields['stok'] = produk.stok.toString();
       request.fields['desk'] = produk.desk;
 
-      // Jika user mengunggah file gambar produk
       if (image != null) {
         request.files.add(
-          await http.MultipartFile.fromPath(
-            'gambar',
-            image.path,
-          ),
+          await http.MultipartFile.fromPath('gambar', image.path),
         );
       }
 
       final streamedResponse = await request.send().timeout(const Duration(seconds: 15));
       final response = await http.Response.fromStream(streamedResponse);
 
-      // Status 201 artinya Created (Data berhasil ditambahkan di Laravel)
-      return response.statusCode == 201;
-    } catch (e) {
-      debugPrint("Error Create: ${e.toString()}");
-      return false;
-    }
-  }
-
-  // ==========================================
-  // 3. UPDATE: Mengubah Data Produk (+ Ganti Gambar)
-  // ==========================================
-  Future<bool> updateProduk(Produk produk, File? image) async {
-    try {
-      final headers = await _getHeaders();
-      final fields = {
-        'nama': produk.nama,
-        'harga': produk.harga.toString(),
-        'stok': produk.stok.toString(),
-        'desk': produk.desk,
-      };
-
-      // Fungsi internal untuk memicu trik Laravel PUT via POST form-data
-      Future<http.Response> sendWithMethod(String method) async {
-        final request = http.MultipartRequest(method, Uri.parse("${baseUrl}produk/${produk.id}"));
-
-        request.headers.addAll(headers);
-        request.fields.addAll(fields);
-
-        // Jika lewat method POST, sisipkan spoofing PUT agar Laravel mengenali proses edit
-        if (method == 'POST') {
-          request.fields['_method'] = 'PUT';
-        }
-
-        if (image != null) {
-          request.files.add(
-            await http.MultipartFile.fromPath(
-              'gambar',
-              image.path,
-            ),
-          );
-        }
-
-        final streamedResponse = await request.send().timeout(const Duration(seconds: 15));
-        return http.Response.fromStream(streamedResponse);
-      }
-
-      // Coba kirim via metode POST dengan spoofing _method = PUT (Sangat direkomendasikan di Laravel)
-      final postResponse = await sendWithMethod('POST');
-      if (postResponse.statusCode == 200 || postResponse.statusCode == 201 || postResponse.statusCode == 204) {
+      if (response.statusCode == 201) {
         return true;
       }
-
-      // Jalur cadangan jika Laravel Anda murni menerima request PUT langsung
-      final putResponse = await sendWithMethod('PUT');
-      return putResponse.statusCode == 200 ||
-          putResponse.statusCode == 201 ||
-          putResponse.statusCode == 204;
+      return false;
     } catch (e) {
-      debugPrint("Error Update: ${e.toString()}");
       return false;
     }
   }
 
-  // ==========================================
-  // 4. DELETE: Menghapus Data Produk
-  // ==========================================
+  Future<bool> updateProduk(Produk produk, File? image) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('api_token');
+
+      var request = http.MultipartRequest('PUT', Uri.parse("${baseUrl}produk/${produk.id}"));
+
+      request.headers.addAll({'Authorization': 'Bearer ${token ?? ""}', 'Accept': 'application/json'});
+
+      request.fields['nama'] = produk.nama;
+      request.fields['harga'] = produk.harga.toString();
+      request.fields['stok'] = produk.stok.toString();
+      request.fields['desk'] = produk.desk;
+
+      if (image != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('gambar', image.path),
+        );
+      }
+
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 15));
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<bool> deleteProduk(int id) async {
     try {
-      final headers = await _getHeaders();
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('api_token');
+
       final response = await http.delete(
         Uri.parse("${baseUrl}produk/$id"),
-        headers: headers, 
+        headers: {'Authorization': 'Bearer ${token ?? ""}', 'Accept': 'application/json'},
       );
       
-      // Status 200 (OK) atau 204 (No Content) menandakan data sukses dihapus
-      return response.statusCode == 200 || response.statusCode == 204;
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return true;
+      }
+      return false;
     } catch (e) {
-      debugPrint("Error Delete: ${e.toString()}");
+      return false;
+    }
+  }
+
+  Future<bool> logout() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('api_token');
+
+      final response = await http.post(
+        Uri.parse("${baseUrl}logout"),
+        headers: {'Authorization': 'Bearer ${token ?? ""}', 'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        await prefs.remove('api_token');
+        return true;
+      }
+      return false;
+    } catch (e) {
       return false;
     }
   }

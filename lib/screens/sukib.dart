@@ -3,6 +3,7 @@ import 'package:ner_12_s1_p1/produk/produk.dart';
 import 'package:ner_12_s1_p1/screens/add.dart';
 import 'package:ner_12_s1_p1/screens/detail.dart';
 import 'package:ner_12_s1_p1/screens/edit.dart';
+import 'package:ner_12_s1_p1/screens/login_page.dart';
 import 'package:ner_12_s1_p1/service/api_se.dart';
 import 'package:ner_12_s1_p1/wsuki/produk_card.dart';
 
@@ -23,7 +24,6 @@ class _SukibState extends State<Sukib> {
     _produkFuture = api.getProduk();
   }
 
-  // Fungsi muat ulang data API
   Future<void> _refreshData() async {
     setState(() {
       _produkFuture = api.getProduk();
@@ -36,6 +36,29 @@ class _SukibState extends State<Sukib> {
       appBar: AppBar(
         title: const Text("Data Produk"),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.red),
+            onPressed: () async {
+              bool berhasil = await api.logout();
+              if (berhasil == true) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Berhasil keluar aplikasi!")),
+                );
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              } else {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Gagal logout, periksa server!")),
+                );
+              }
+            },
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _refreshData,
@@ -65,7 +88,6 @@ class _SukibState extends State<Sukib> {
                   final produk = listProduk[index];
                   return ProdukCard(
                     produk: produk,
-                    // PERBAIKAN: Menambahkan penangkap data kembalian 'hasil' dari halaman Detail
                     onDetail: () async {
                       final hasil = await Navigator.push(
                         context,
@@ -73,7 +95,6 @@ class _SukibState extends State<Sukib> {
                           builder: (_) => Detail(produk: produk),
                         ),
                       );
-                    
                       if (hasil == true) {
                         _refreshData();
                       }
@@ -142,7 +163,6 @@ class _SukibState extends State<Sukib> {
                 },
               );
             }
-            // Kondisi jika data kosong
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               children: [

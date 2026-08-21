@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart'; 
-import 'package:shared_preferences/shared_preferences.dart'; // 1. PASTIKAN SUDAH IMPORT INI
+import 'package:shared_preferences/shared_preferences.dart'; 
 import 'sukib.dart';
 
 class LoginPage extends StatefulWidget {
@@ -45,13 +45,11 @@ class _LoginPageState extends State<LoginPage> {
         String token = response.data['token'];
         debugPrint("Token Sanctum Berhasil Diterima: $token");
 
-        // ========================================================
-        // 🔒 PERBAIKAN: SIMPAN TOKEN KE MEMORI SEBELUM PINDAH HALAMAN
-        // ========================================================
+   
         final SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('api_token', token); // Wajib gunakan key 'api_token'
+        await prefs.setString('api_token', token); 
         debugPrint("Token resmi tersimpan di memori lokal Windows!");
-        // ========================================================
+
 
         if (!mounted) return;
         Navigator.pushReplacement(
