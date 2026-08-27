@@ -17,6 +17,18 @@ class _LoginPageState extends State<LoginPage> {
 
   final Dio dio = Dio();
 
+  @override
+  void initState() {
+    super.initState();
+    bersihkanTokenCacat();
+  }
+
+  Future<void> bersihkanTokenCacat() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('api_token');
+    debugPrint("Sesi memori lama berhasil dibersihkan!");
+  }
+
   Future<void> login() async {
     if (emailController.text.isEmpty || pwController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -45,11 +57,9 @@ class _LoginPageState extends State<LoginPage> {
         String token = response.data['token'];
         debugPrint("Token Sanctum Berhasil Diterima: $token");
 
-   
         final SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('api_token', token); 
         debugPrint("Token resmi tersimpan di memori lokal Windows!");
-
 
         if (!mounted) return;
         Navigator.pushReplacement(

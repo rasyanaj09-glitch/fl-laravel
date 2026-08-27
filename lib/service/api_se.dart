@@ -20,7 +20,7 @@ class ApiService {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString('api_token');
-
+ 
       final response = await http.get(
         Uri.parse("${baseUrl}produk"), 
         headers: {
@@ -79,7 +79,8 @@ class ApiService {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString('api_token');
 
-      var request = http.MultipartRequest('PUT', Uri.parse("${baseUrl}produk/${produk.id}"));
+      // 1. Ubah MultipartRequest menjadi POST agar bisa mengirimkan file gambar
+      var request = http.MultipartRequest('POST', Uri.parse("${baseUrl}produk/${produk.id}"));
 
       request.headers.addAll({'Authorization': 'Bearer ${token ?? ""}', 'Accept': 'application/json'});
 
@@ -87,6 +88,9 @@ class ApiService {
       request.fields['harga'] = produk.harga.toString();
       request.fields['stok'] = produk.stok.toString();
       request.fields['desk'] = produk.desk;
+      
+      // 2. Tambahkan spoofing _method = PUT agar Laravel mengenalinya sebagai route PUT
+      request.fields['_method'] = 'PUT';
 
       if (image != null) {
         request.files.add(
@@ -130,18 +134,42 @@ class ApiService {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString('api_token');
 
-      final response = await http.post(
+      http.post(
         Uri.parse("${baseUrl}logout"),
         headers: {'Authorization': 'Bearer ${token ?? ""}', 'Accept': 'application/json'},
       );
 
-      if (response.statusCode == 200) {
-        await prefs.remove('api_token');
-        return true;
-      }
-      return false;
+      await prefs.remove('api_token');
+      return true;
     } catch (e) {
-      return false;
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove('api_token');
+      return true;
     }
   }
+    Future<List<Produk>> searchProduk(String keyword) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('api_token');
+
+      // Mengirim kata kunci lewat query parameter (?keyword=...)
+      final response = await http.get(
+        Uri.parse("${baseUrl}produk/search?keyword=$keyword"), 
+        headers: {
+          'Authorization': 'Bearer ${token ?? ""}',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        List jsonData = jsonDecode(response.body);
+        return jsonData.map((e) => Produk.fromJson(e)).toList();
+      } else {
+        throw Exception("Gagal mencari produk");
+      }
+    } catch (e) {
+      throw Exception("Gagal terhubung ke server: $e");
+    }
+  }
+
 }

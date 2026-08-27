@@ -6,6 +6,7 @@ import 'package:ner_12_s1_p1/screens/edit.dart';
 import 'package:ner_12_s1_p1/screens/login_page.dart';
 import 'package:ner_12_s1_p1/service/api_se.dart';
 import 'package:ner_12_s1_p1/wsuki/produk_card.dart';
+import 'package:ner_12_s1_p1/wsuki/dashboard.dart'; // Pastikan import widget Dashboard baru Anda
 
 class Sukib extends StatefulWidget {
   const Sukib({super.key});
@@ -16,6 +17,7 @@ class Sukib extends StatefulWidget {
 
 class _SukibState extends State<Sukib> {
   final ApiService api = ApiService();
+  final searchController = TextEditingController();
   late Future<List<Produk>> _produkFuture;
 
   @override
@@ -53,7 +55,8 @@ class _SukibState extends State<Sukib> {
               } else {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Gagal logout, periksa server!")),
+                  const SnackBar(
+                      content: Text("Gagal logout, periksa server!")),
                 );
               }
             },
@@ -81,87 +84,155 @@ class _SukibState extends State<Sukib> {
             }
             if (snapshot.hasData && snapshot.data!.isNotEmpty) {
               List<Produk> listProduk = snapshot.data!;
-              return ListView.builder(
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: listProduk.length,
-                itemBuilder: (context, index) {
-                  final produk = listProduk[index];
-                  return ProdukCard(
-                    produk: produk,
-                    onDetail: () async {
-                      final hasil = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => Detail(produk: produk),
+
+              int hitungStok = 0;
+              for (int i = 0; i < listProduk.length; i++) {
+                hitungStok = hitungStok + listProduk[i].stok;
+              }
+
+            return Column(
+  children: [
+    // 1. TAMBAHAN BARU: Input Teks Kolom Pencarian Produk
+    Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextField(
+        controller: searchController,
+        decoration: InputDecoration(
+          hintText: "Cari nama produk...",
+          prefixIcon: const Icon(Icons.search),
+          border: const OutlineInputBorder(),
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.clear),
+            onPressed: () {
+              searchController.clear();
+              _refreshData(); 
+            },
+          ),
+        ),
+        onSubmitted: (value) {
+          if (value.trim().isNotEmpty) {
+            setState(() {
+              _produkFuture = api.searchProduk(value.trim());
+            });
+          } else {
+            _refreshData();
+          }
+        },
+      ),
+    ),
+
+    // 2. KODE LAMA ANDA: Bagian Dashboard Statistik
+    Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Dashboard(
+              title: "Total Produk",
+              value: listProduk.length.toString(),
+              iconData: Icons.shopping_bag,
+              color: Colors.blue,
+            ),
+          ),
+          Expanded(
+            child: Dashboard(
+              title: "Total Stok",
+              value: hitungStok.toString(),
+              iconData: Icons.inventory,
+              color: Colors.green,
+            ),
+          ),
+        ],
+      ),
+    ),
+
+    // 3. KODE LAMA ANDA: Bagian Daftar List View Produk Builder
+    Expanded(
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: listProduk.length,
+        itemBuilder: (context, index) {
+          final produk = listProduk[index];
+          return ProdukCard(
+            produk: produk,
+            onDetail: () async {
+              final hasil = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => Detail(produk: produk),
+                ),
+              );
+              if (hasil == true) {
+                _refreshData();
+              }
+            },
+            onEdit: () async {
+              final hasil = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => editSuki(produk: produk),
+                ),
+              );
+              if (hasil == true) {
+                _refreshData();
+              }
+            },
+            onDelete: () async {
+              bool? konfirmasi = await showDialog<bool>(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text("Hapus Produk"),
+                    content: Text(
+                      "Apakah Anda yakin ingin menghapus produk '${produk.nama}'?",
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text("Batal"),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
                         ),
-                      );
-                      if (hasil == true) {
-                        _refreshData();
-                      }
-                    },
-                    onEdit: () async {
-                      final hasil = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => editSuki(produk: produk),
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text(
+                          "Ya, Hapus",
+                          style: TextStyle(color: Colors.white),
                         ),
-                      );
-                      if (hasil == true) {
-                        _refreshData();
-                      }
-                    },
-                    onDelete: () async {
-                      bool? konfirmasi = await showDialog<bool>(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text("Hapus Produk"),
-                            content: Text(
-                              "Apakah Anda yakin ingin menghapus produk '${produk.nama}'?",
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text("Batal"),
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                ),
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text(
-                                  "Ya, Hapus",
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                      if (konfirmasi == true && produk.id != null) {
-                        bool berhasil = await api.deleteProduk(produk.id!);
-                        if (mounted) {
-                          if (berhasil) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Produk berhasil dihapus!"),
-                              ),
-                            );
-                            _refreshData();
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Gagal menghapus produk"),
-                              ),
-                            );
-                          }
-                        }
-                      }
-                    },
+                      ),
+                    ],
                   );
                 },
               );
+              if (konfirmasi == true && produk.id != null) {
+                bool berhasil = await api.deleteProduk(produk.id!);
+                if (mounted) {
+                  if (berhasil) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Produk berhasil dihapus!"),
+                      ),
+                    );
+                    _refreshData();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Gagal menghapus produk"),
+                      ),
+                    );
+                  }
+                }
+              }
+            },
+          );
+        },
+      ),
+    ),
+  ],
+);
+
             }
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
