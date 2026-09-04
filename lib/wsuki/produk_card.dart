@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ner_12_s1_p1/produk/produk.dart';
-import 'package:ner_12_s1_p1/service/api_se.dart'; // Digunakan untuk memanggil ApiService.baseUrl
+import 'package:ner_12_s1_p1/service/api_se.dart'; 
 
 class ProdukCard extends StatelessWidget {
   final Produk produk;
@@ -15,6 +15,9 @@ class ProdukCard extends StatelessWidget {
     required this.onDelete,
     required this.onDetail,
   });
+  String formatRupiah(num nominal) {
+    return "Rp ${nominal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +81,7 @@ class ProdukCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 5),
                         Text(
-                          "Harga: Rp ${produk.harga}",
+                          "Harga:${(formatRupiah(produk.harga))}",
                           style: const TextStyle(
                             fontSize: 16,
                             color: Colors.green, 

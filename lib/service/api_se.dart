@@ -79,7 +79,7 @@ class ApiService {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString('api_token');
 
-      // 1. Ubah MultipartRequest menjadi POST agar bisa mengirimkan file gambar
+   
       var request = http.MultipartRequest('POST', Uri.parse("${baseUrl}produk/${produk.id}"));
 
       request.headers.addAll({'Authorization': 'Bearer ${token ?? ""}', 'Accept': 'application/json'});
@@ -89,7 +89,7 @@ class ApiService {
       request.fields['stok'] = produk.stok.toString();
       request.fields['desk'] = produk.desk;
       
-      // 2. Tambahkan spoofing _method = PUT agar Laravel mengenalinya sebagai route PUT
+     
       request.fields['_method'] = 'PUT';
 
       if (image != null) {
@@ -152,7 +152,6 @@ class ApiService {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString('api_token');
 
-      // Mengirim kata kunci lewat query parameter (?keyword=...)
       final response = await http.get(
         Uri.parse("${baseUrl}produk/search?keyword=$keyword"), 
         headers: {
